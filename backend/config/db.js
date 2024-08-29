@@ -1,38 +1,17 @@
 const mongoose = require('mongoose');
+require('dotenv').config();
 
 const connectDB = async () => {
     try {
-        await mongoose.connect('mongodb://atlas-sql-642f10987271fc65e2dfac92-xjq2p.a.query.mongodb.net/myDatabase?ssl=true&authSource=admin');
-        console.log('MongoDB Connected');
-    } catch (err) {
-        console.error(err.message);
+        await mongoose.connect(process.env.MONGO_URI);
+        console.log('MongoDB connected');
+    } catch (error) {
+        console.error('Error connecting to MongoDB:', error);
         process.exit(1);
     }
 };
 
-// Models
-const User = mongoose.model('User', new mongoose.Schema({
-    username: { type: String, required: true, unique: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    role: { type: String, default: 'student' }
-}));
-
-const Course = mongoose.model('Course', new mongoose.Schema({
-    title: { type: String, required: true },
-    description: { type: String, required: true },
-    instructor: { type: String, required: true },
-    duration: { type: Number, required: true },
-    createdAt: { type: Date, default: Date.now }
-}));
-
-const Enrollment = mongoose.model('Enrollment', new mongoose.Schema({
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true },
-    progress: { type: Number, default: 0 },
-    completed: { type: Boolean, default: false },
-    enrolledAt: { type: Date, default: Date.now }
-}));
+module.exports = connectDB;
 
 const addDataIfNotExists = async () => {
     try {
