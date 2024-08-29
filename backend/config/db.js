@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-// Connect to MongoDB
 const connectDB = async () => {
     try {
         await mongoose.connect('mongodb://atlas-sql-642f10987271fc65e2dfac92-xjq2p.a.query.mongodb.net/myDatabase?ssl=true&authSource=admin');
@@ -35,13 +34,10 @@ const Enrollment = mongoose.model('Enrollment', new mongoose.Schema({
     enrolledAt: { type: Date, default: Date.now }
 }));
 
-// Function to add data if it doesn't exist
 const addDataIfNotExists = async () => {
     try {
-        // Connect to the database
         await connectDB();
 
-        // Users
         const users = [
             { username: 'student1', email: 'student1@example.com', password: '$2a$10$KxJ9u5EtWLn/j3S/f5e3gOpQ2dQ3N5g4mM5J9YIHKAIg3lX3U9rO2', role: 'student' },
             { username: 'student2', email: 'student2@example.com', password: '$2a$10$KxJ9u5EtWLn/j3S/f5e3gOpQ2dQ3N5g4mM5J9YIHKAIg3lX3U9rO2', role: 'student' },
