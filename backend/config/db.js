@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
+const User = require('../models/User');
+const Enrollment = require('../models/Enrollment');
+const Course = require('../models/Course');
 
 const connectDB = async () => {
     try {
