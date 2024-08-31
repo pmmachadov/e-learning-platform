@@ -1,42 +1,27 @@
 const mongoose = require('mongoose');
+require('dotenv').config();
+const User = require('../models/User');
+const Enrollment = require('../models/Enrollment');
+const Course = require('../models/Course');
 
 const connectDB = async () => {
     try {
-        await mongoose.connect('mongodb://atlas-sql-642f10987271fc65e2dfac92-xjq2p.a.query.mongodb.net/myDatabase?ssl=true&authSource=admin');
-        console.log('MongoDB Connected');
-    } catch (err) {
-        console.error(err.message);
+        mongoose.connect(process.env.MONGO_URI);
+
+        console.log('MongoDB connected');
+    } catch (error) {
+        console.error('Error connecting to MongoDB:', error);
         process.exit(1);
     }
 };
 
-// Models
-const User = mongoose.model('User', new mongoose.Schema({
-    username: { type: String, required: true, unique: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    role: { type: String, default: 'student' }
-}));
-
-const Course = mongoose.model('Course', new mongoose.Schema({
-    title: { type: String, required: true },
-    description: { type: String, required: true },
-    instructor: { type: String, required: true },
-    duration: { type: Number, required: true },
-    createdAt: { type: Date, default: Date.now }
-}));
-
-const Enrollment = mongoose.model('Enrollment', new mongoose.Schema({
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true },
-    progress: { type: Number, default: 0 },
-    completed: { type: Boolean, default: false },
-    enrolledAt: { type: Date, default: Date.now }
-}));
+module.exports = connectDB;
 
 const addDataIfNotExists = async () => {
     try {
         await connectDB();
+
+        console.log('--- Starting User Insertion/Update ---');
 
         const users = [
             { username: 'student1', email: 'student1@example.com', password: '$2a$10$KxJ9u5EtWLn/j3S/f5e3gOpQ2dQ3N5g4mM5J9YIHKAIg3lX3U9rO2', role: 'student' },
@@ -47,61 +32,74 @@ const addDataIfNotExists = async () => {
         ];
 
         for (let userData of users) {
-            let user = await User.findOne({ email: userData.email });
-            if (!user) {
-                await User.create(userData);
-                console.log(`User ${userData.username} added`);
-            }
+            const result = await User.findOneAndUpdate(
+                { email: userData.email },  // Filtra por email
+                userData,  // Datos a actualizar o insertar
+                { upsert: true, new: true }  // Crea un nuevo documento si no existe, y devuelve el documento actualizado
+            );
+            console.log(`[User Insertion/Update] User ${result.username} added or updated successfully`);
         }
+
+        console.log('--- User Insertion/Update Complete ---');
+
+        console.log('--- Starting Course Insertion/Update ---');
 
         // Courses
         const courses = [
-            { title: 'React for Beginners', description: 'An introductory course on React.js', instructor: 'John Doe', duration: 10 },
-            { title: 'Node.js Advanced', description: 'A deep dive into Node.js features', instructor: 'Jane Smith', duration: 15 },
-            { title: 'Python for Data Science', description: 'Learn Python with a focus on data science and machine learning', instructor: 'Alice Johnson', duration: 20 },
-            { title: 'Web Design with HTML & CSS', description: 'Learn the basics of web design using HTML and CSS', instructor: 'Bob Brown', duration: 8 },
-            { title: 'Introduction to Databases', description: 'A beginner course on databases and SQL', instructor: 'Chris White', duration: 12 },
+            { title: 'Yoga for Beginners', description: 'An introductory course on yoga practices and philosophy', instructor: 'John Doe', duration: 10 },
+            { title: 'Advanced Relaxation Techniques', description: 'A deep dive into advanced relaxation methods', instructor: 'Jane Smith', duration: 15 },
+            { title: 'Breathing for Wellness', description: 'Learn breathing techniques to enhance mental and physical well-being', instructor: 'Alice Johnson', duration: 20 },
+            { title: 'Meditation and Mindfulness', description: 'Learn the basics of meditation and mindfulness practices', instructor: 'Bob Brown', duration: 8 },
+            { title: 'Introduction to Yoga Nidra', description: 'A beginner course on Yoga Nidra, the yoga of sleep', instructor: 'Chris White', duration: 12 },
         ];
 
         for (let courseData of courses) {
-            let course = await Course.findOne({ title: courseData.title });
-            if (!course) {
-                await Course.create(courseData);
-                console.log(`Course "${courseData.title}" added`);
-            }
+            const result = await Course.findOneAndUpdate(
+                { title: courseData.title },  // Filtra por título del curso
+                courseData,  // Datos a actualizar o insertar
+                { upsert: true, new: true }  // Crea un nuevo documento si no existe, y devuelve el documento actualizado
+            );
+            console.log(`[Course Insertion/Update] Course "${result.title}" added or updated successfully`);
         }
+
+        console.log('--- Course Insertion/Update Complete ---');
+
+        console.log('--- Starting Enrollment Insertion/Update ---');
 
         // Enrollments
         const student1 = await User.findOne({ email: 'student1@example.com' });
         const student2 = await User.findOne({ email: 'student2@example.com' });
         const student3 = await User.findOne({ email: 'student3@example.com' });
 
-        const reactCourse = await Course.findOne({ title: 'React for Beginners' });
-        const nodeCourse = await Course.findOne({ title: 'Node.js Advanced' });
-        const pythonCourse = await Course.findOne({ title: 'Python for Data Science' });
+        const yogaCourse = await Course.findOne({ title: 'Yoga for Beginners' });
+        const relaxationCourse = await Course.findOne({ title: 'Advanced Relaxation Techniques' });
+        const breathingCourse = await Course.findOne({ title: 'Breathing for Wellness' });
 
         const enrollments = [
-            { user: student1._id, course: reactCourse._id, progress: 50 },
-            { user: student1._id, course: pythonCourse._id, progress: 20 },
-            { user: student2._id, course: nodeCourse._id, progress: 30 },
-            { user: student2._id, course: reactCourse._id, progress: 10 },
-            { user: student3._id, course: pythonCourse._id, progress: 70 },
-            { user: student3._id, course: nodeCourse._id, progress: 40 },
+            { user: student1._id, course: yogaCourse._id, progress: 50 },
+            { user: student1._id, course: breathingCourse._id, progress: 20 },
+            { user: student2._id, course: relaxationCourse._id, progress: 30 },
+            { user: student2._id, course: yogaCourse._id, progress: 10 },
+            { user: student3._id, course: breathingCourse._id, progress: 70 },
+            { user: student3._id, course: relaxationCourse._id, progress: 40 },
         ];
 
         for (let enrollmentData of enrollments) {
-            let enrollment = await Enrollment.findOne({ user: enrollmentData.user, course: enrollmentData.course });
-            if (!enrollment) {
-                await Enrollment.create(enrollmentData);
-                console.log(`Enrollment of ${enrollmentData.user} in course ${enrollmentData.course} added`);
-            }
+            const result = await Enrollment.findOneAndUpdate(
+                { user: enrollmentData.user, course: enrollmentData.course },  // Filtra por usuario y curso
+                enrollmentData,  // Datos a actualizar o insertar
+                { upsert: true, new: true }  // Crea un nuevo documento si no existe, y devuelve el documento actualizado
+            );
+            console.log(`[Enrollment Insertion/Update] Enrollment of user ${result.user} in course ${result.course} added or updated successfully`);
         }
+
+        console.log('--- Enrollment Insertion/Update Complete ---');
 
         // Close the connection
         mongoose.connection.close();
-        console.log('Data verification and insertion complete');
+        console.log('Data verification and insertion complete. Connection closed.');
     } catch (error) {
-        console.error(error);
+        console.error('An error occurred during data insertion:', error);
         mongoose.connection.close();
     }
 };
