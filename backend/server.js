@@ -22,7 +22,7 @@ connectDB(); // Establish the MongoDB connection
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/courses', courseRoutes);
-app.use('/api/student', studentRoutes);
+app.use('/api/students', studentRoutes);
 
 // Socket.io
 require('./socket')(io);
